@@ -1,45 +1,45 @@
 <!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
-<title>Fruiduko</title>
+<title>Fruidoku</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400..700&family=DM+Mono:wght@400;500&display=swap">
 <style>
 /* Layout: one centred column. The board is the hero; stats sit above it, tools and number pad below it. */
-/* Colour plan: a fruit stand. Leaf green for actions, orange for the selected cell, lemon for matches, berry red for mistakes. */
+/* Colour plan: cool blue-grey ground so the fruit colours stand out. Blue for actions and selection, berry red for mistakes. */
 :root {
-  --bg: #eaf5d8;
-  --surface: #fffdf6;
-  --ink: #33301f;
-  --muted: #6c6a52;
-  --line: #d9dfc0;
-  --line-strong: #4b5a2e;
-  --accent: #3d8b37;
+  --bg: #edf0f4;
+  --surface: #ffffff;
+  --ink: #172033;
+  --muted: #5b6679;
+  --line: #c3cad6;
+  --line-strong: #172033;
+  --accent: #2552d9;
   --accent-ink: #ffffff;
-  --select-bg: #ffd9a6;
-  --select-ring: #ef7d1a;
-  --given-bg: #f3f0dc;
-  --same: #fff0a8;
-  --peer: #f4f8e2;
-  --bad: #c2284a;
-  --bad-soft: #fcd9df;
-  --panel: #d8e8bd;
+  --select-bg: #d6e2fb;
+  --select-ring: #2552d9;
+  --given-bg: #e9edf4;
+  --same: #e2eaf9;
+  --peer: #eef2f8;
+  --bad: #c62f3e;
+  --bad-soft: #fbdde0;
+  --panel: #e1e6ee;
   --font-display: "Fredoka", "Nunito", system-ui, -apple-system, "Segoe UI", sans-serif;
   --font-mono: "DM Mono", ui-monospace, "SF Mono", Menlo, monospace;
 }
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
-    --bg: #1a2216; --surface: #252f20; --ink: #f2f1df; --muted: #a8ad92;
-    --line: #3a4730; --line-strong: #a3b78a; --accent: #8ed16c; --accent-ink: #13200c;
-    --select-bg: #5a3a18; --select-ring: #ffa447; --given-bg: #2e3a27; --same: #4f4a1a;
-    --peer: #2b3625; --bad: #ff8095; --bad-soft: #522230; --panel: #34412b; color-scheme: dark;
+    --bg: #0f141d; --surface: #172030; --ink: #e8edf6; --muted: #93a0b8;
+    --line: #2c3850; --line-strong: #8fa0be; --accent: #7fa2ff; --accent-ink: #0f141d;
+    --select-bg: #29407a; --select-ring: #7fa2ff; --given-bg: #1d2740; --same: #22345f;
+    --peer: #1c2638; --bad: #ff8a94; --bad-soft: #4a222a; --panel: #1f2a3e; color-scheme: dark;
   }
 }
 :root[data-theme="dark"] {
-  --bg: #1a2216; --surface: #252f20; --ink: #f2f1df; --muted: #a8ad92;
-  --line: #3a4730; --line-strong: #a3b78a; --accent: #8ed16c; --accent-ink: #13200c;
-  --select-bg: #5a3a18; --select-ring: #ffa447; --given-bg: #2e3a27; --same: #4f4a1a;
-  --peer: #2b3625; --bad: #ff8095; --bad-soft: #522230; --panel: #34412b; color-scheme: dark;
+  --bg: #0f141d; --surface: #172030; --ink: #e8edf6; --muted: #93a0b8;
+  --line: #2c3850; --line-strong: #8fa0be; --accent: #7fa2ff; --accent-ink: #0f141d;
+  --select-bg: #29407a; --select-ring: #7fa2ff; --given-bg: #1d2740; --same: #22345f;
+  --peer: #1c2638; --bad: #ff8a94; --bad-soft: #4a222a; --panel: #1f2a3e; color-scheme: dark;
 }
 
 * { box-sizing: border-box; }
@@ -65,9 +65,11 @@ button { font: inherit; color: inherit; }
 }
 
 /* Header: title on the left, timer and mistakes on the right */
-.top { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; }
+.top { display: flex; align-items: baseline; justify-content: space-between; flex-wrap: wrap; gap: 4px 12px; }
+.brand { display: flex; align-items: baseline; gap: 8px; min-width: 0; }
+.tagline { font-size: 12px; color: var(--muted); white-space: nowrap; }
 h1 { margin: 0; font-size: 26px; font-weight: 800; letter-spacing: -0.03em; line-height: 1; text-wrap: balance; }
-.stats { display: flex; gap: 14px; font-family: var(--font-mono); font-size: 14px; color: var(--muted); font-variant-numeric: tabular-nums; }
+.stats { display: flex; gap: 10px; margin-left: auto; font-family: var(--font-mono); font-size: 13px; color: var(--muted); font-variant-numeric: tabular-nums; }
 .stats b { color: var(--ink); font-weight: 500; }
 .stats .warn b { color: var(--bad); }
 
@@ -275,7 +277,7 @@ h1 { margin: 0; font-size: 26px; font-weight: 800; letter-spacing: -0.03em; line
 <!-- Game screen: header, difficulty, board, tools, number pad -->
 <main class="app">
   <div class="top">
-    <h1>Fruiduko</h1>
+    <div class="brand"><h1>Fruidoku</h1><span class="tagline">A fruit Sudoku</span></div>
     <div class="stats" aria-live="off">
       <span id="timer-wrap"><b id="timer">0:00</b></span>
       <span id="miss-wrap">Mistakes <b id="miss">0/3</b></span>
