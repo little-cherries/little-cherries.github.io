@@ -494,7 +494,9 @@ h1 { margin: 0; font-size: 26px; font-weight: 800; letter-spacing: -0.03em; line
     document.getElementById('ov-text').textContent = won
       ? LEVEL_NAME[S.level] + ' puzzle complete.'
       : 'Three wrong numbers ends the round. Try the same puzzle again or start a new one.';
+    ov.dataset.mode = 'end';
     var f = document.getElementById('ov-facts');
+    f.hidden = false;
     f.innerHTML = '';
     [[fmt(S.secs), 'time'], [S.mistakes, 'mistakes'], [S.hints, 'hints']].forEach(function (x) {
       var d = document.createElement('div'), b = document.createElement('b'), s = document.createElement('span');
@@ -515,6 +517,31 @@ h1 { margin: 0; font-size: 26px; font-weight: 800; letter-spacing: -0.03em; line
     p.focus();
   }
 
+  /* ---------- confirm before discarding progress ---------- */
+  function hasProgress() {
+    if (locked()) return false;
+    for (var i = 0; i < 81; i++) if (S.values[i] !== S.puzzle[i]) return true;
+    return false;
+  }
+  function requestNew(level) {
+    if (!hasProgress()) { newGame(level); return; }
+    ov.dataset.mode = 'confirm';
+    document.getElementById('ov-title').textContent = 'Start a new game?';
+    document.getElementById('ov-text').textContent = 'You will lose your progress on this puzzle.' +
+      (level !== S.level ? ' The new puzzle will be ' + LEVEL_NAME[level] + '.' : '');
+    document.getElementById('ov-facts').hidden = true;
+    var p = document.getElementById('ov-primary'), q = document.getElementById('ov-secondary');
+    p.textContent = 'Start new game';
+    p.onclick = function () { newGame(level); };
+    q.hidden = false; q.textContent = 'Keep playing';
+    q.onclick = hideOverlay;
+    ov.hidden = false;
+    q.focus();
+  }
+  ov.addEventListener('click', function (e) {
+    if (e.target === ov && ov.dataset.mode === 'confirm') hideOverlay();
+  });
+
   /* ---------- events ---------- */
   boardEl.addEventListener('click', function (e) {
     var b = e.target.closest('.cell');
@@ -529,13 +556,17 @@ h1 { margin: 0; font-size: 26px; font-weight: 800; letter-spacing: -0.03em; line
   document.getElementById('erase').addEventListener('click', erase);
   document.getElementById('hint').addEventListener('click', hint);
   document.getElementById('notes').addEventListener('click', function () { S.notesMode = !S.notesMode; render(); });
-  document.getElementById('new-game').addEventListener('click', function () { newGame(S.level); });
+  document.getElementById('new-game').addEventListener('click', function () { requestNew(S.level); });
   Array.prototype.forEach.call(document.querySelectorAll('.seg button'), function (b) {
-    b.addEventListener('click', function () { if (b.dataset.level !== S.level) newGame(b.dataset.level); });
+    b.addEventListener('click', function () { if (b.dataset.level !== S.level) requestNew(b.dataset.level); });
   });
 
   document.addEventListener('keydown', function (e) {
-    if (!ov.hidden || e.altKey || e.metaKey) return;
+    if (!ov.hidden) {
+      if (e.key === 'Escape' && ov.dataset.mode === 'confirm') hideOverlay();
+      return;
+    }
+    if (e.altKey || e.metaKey) return;
     var k = e.key;
     if (k >= '1' && k <= '9') { input(+k); e.preventDefault(); }
     else if (k === 'Backspace' || k === 'Delete' || k === '0') { erase(); e.preventDefault(); }
