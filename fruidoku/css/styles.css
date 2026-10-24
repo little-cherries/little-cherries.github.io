@@ -1,0 +1,183 @@
+/* Layout: one centred column. The board is the hero; stats sit above it, tools and number pad below it. */
+/* Colour plan: cool blue-grey ground so the fruit colours stand out. Blue for actions and selection, berry red for mistakes. */
+:root {
+  --bg: #edf0f4;
+  --surface: #ffffff;
+  --ink: #172033;
+  --muted: #5b6679;
+  --line: #c3cad6;
+  --line-strong: #172033;
+  --accent: #2552d9;
+  --accent-ink: #ffffff;
+  --select-bg: #d6e2fb;
+  --select-ring: #2552d9;
+  --given-bg: #e9edf4;
+  --same: #e2eaf9;
+  --peer: #eef2f8;
+  --bad: #c62f3e;
+  --bad-soft: #fbdde0;
+  --panel: #e1e6ee;
+  --font-display: "Fredoka", "Nunito", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-mono: "DM Mono", ui-monospace, "SF Mono", Menlo, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0f141d; --surface: #172030; --ink: #e8edf6; --muted: #93a0b8;
+    --line: #2c3850; --line-strong: #8fa0be; --accent: #7fa2ff; --accent-ink: #0f141d;
+    --select-bg: #29407a; --select-ring: #7fa2ff; --given-bg: #1d2740; --same: #22345f;
+    --peer: #1c2638; --bad: #ff8a94; --bad-soft: #4a222a; --panel: #1f2a3e; color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0f141d; --surface: #172030; --ink: #e8edf6; --muted: #93a0b8;
+  --line: #2c3850; --line-strong: #8fa0be; --accent: #7fa2ff; --accent-ink: #0f141d;
+  --select-bg: #29407a; --select-ring: #7fa2ff; --given-bg: #1d2740; --same: #22345f;
+  --peer: #1c2638; --bad: #ff8a94; --bad-soft: #4a222a; --panel: #1f2a3e; color-scheme: dark;
+}
+
+* { box-sizing: border-box; }
+body {
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--font-display);
+  padding-block: 14px 24px;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  display: flex;
+  justify-content: center;
+  -webkit-tap-highlight-color: transparent;
+}
+button { font: inherit; color: inherit; }
+
+.app {
+  width: min(100%, 520px, max(300px, calc(100svh - 330px)));
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+/* Header: title on the left, timer and mistakes on the right */
+.top { display: flex; align-items: baseline; justify-content: space-between; flex-wrap: wrap; gap: 4px 12px; }
+.brand { display: flex; align-items: baseline; gap: 8px; min-width: 0; }
+.tagline { font-size: 12px; color: var(--muted); white-space: nowrap; }
+h1 { margin: 0; font-size: 26px; font-weight: 800; letter-spacing: -0.03em; line-height: 1; text-wrap: balance; }
+.stats { display: flex; gap: 10px; margin-left: auto; font-family: var(--font-mono); font-size: 13px; color: var(--muted); font-variant-numeric: tabular-nums; }
+.stats b { color: var(--ink); font-weight: 500; }
+.stats .warn b { color: var(--bad); }
+
+/* Difficulty switch and New game button */
+.bar { display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; }
+.seg { display: inline-flex; background: var(--panel); border-radius: 10px; padding: 3px; gap: 2px; }
+.seg button {
+  border: 0; background: transparent; padding: 7px 13px; border-radius: 8px;
+  font-size: 14px; font-weight: 500; color: var(--muted); cursor: pointer; min-height: 34px;
+}
+.seg button[aria-checked="true"] { background: var(--surface); color: var(--ink); font-weight: 700; box-shadow: 0 1px 2px rgba(0,0,0,.15); }
+.ghost {
+  border: 1.5px solid var(--line-strong); background: transparent; border-radius: 10px;
+  padding: 7px 14px; font-size: 14px; font-weight: 700; cursor: pointer; min-height: 40px;
+}
+
+/* The 9x9 board. container-type lets digits scale with the board width (cqw units). */
+.board {
+  display: grid;
+  grid-template-columns: repeat(9, 1fr);
+  grid-template-rows: repeat(9, 1fr);
+  aspect-ratio: 1;
+  width: 100%;
+  max-width: 100%;
+  container-type: inline-size;
+  background: var(--surface);
+  border: 2px solid var(--line-strong);
+  border-radius: 10px;
+  overflow: hidden;
+}
+/* One cell. Thin lines everywhere; .cr / .cb add thick lines between 3x3 boxes; .ce / .be remove the outer edge. */
+.cell {
+  appearance: none; margin: 0; padding: 0; min-width: 0; min-height: 0;
+  position: relative; background: var(--surface); color: var(--ink);
+  border: 0; border-right: 1px solid var(--line); border-bottom: 1px solid var(--line);
+  cursor: pointer; display: grid; place-items: center; font-family: var(--font-display);
+}
+.cell.cr { border-right: 2px solid var(--line-strong); }
+.cell.cb { border-bottom: 2px solid var(--line-strong); }
+.cell.ce { border-right: 0; }
+.cell.be { border-bottom: 0; }
+/* Highlight states, weakest to strongest: same row/column/box, same digit, selected cell. Wrong digits go red. */
+.cell.given { background: var(--given-bg); }
+.cell.peer { background: var(--peer); }
+.cell.same { background: var(--same); }
+.cell.sel { background: var(--select-bg); box-shadow: inset 0 0 0 3px var(--select-ring); z-index: 1; }
+.cell.bad { background: var(--bad-soft); box-shadow: inset 0 0 0 2px var(--bad); }
+.cell:focus-visible { outline: 2px solid var(--select-ring); outline-offset: -3px; z-index: 2; }
+/* Fruit icons: each digit 1-9 is drawn as one fruit (see the <symbol> sheet in the HTML). */
+.v { width: 80%; height: 80%; display: block; }
+.v svg, .nt i svg, .key .d svg { display: block; width: 100%; height: 100%; }
+/* Pencil marks: a 3x3 grid of small digits inside the cell, shown only while the cell is empty */
+.nt { position: absolute; inset: 7%; display: grid; grid-template-columns: repeat(3, 1fr); grid-template-rows: repeat(3, 1fr); pointer-events: none; }
+.nt i {
+  visibility: hidden; font-style: normal; font-family: var(--font-mono);
+  display: grid; place-items: center; line-height: 1;
+}
+.nt i.on { visibility: visible; }
+.cell.hasv .nt { display: none; }
+
+/* Undo / Erase / Notes / Hint buttons */
+.tools { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
+.tool {
+  border: 0; background: var(--panel); border-radius: 12px; min-height: 56px; cursor: pointer;
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px;
+  font-size: 12px; font-weight: 500; position: relative; padding: 6px 2px;
+}
+.tool svg { width: 20px; height: 20px; }
+.tool[aria-pressed="true"] { background: var(--accent); color: var(--accent-ink); }
+.tool:disabled { opacity: .4; cursor: default; }
+.tool .badge {
+  position: absolute; top: 5px; right: 8px; font-family: var(--font-mono); font-size: 10px; color: var(--muted);
+}
+.tool[aria-pressed="true"] .badge { color: var(--accent-ink); }
+
+/* Number pad: nine buttons in one row, each with a "remaining" counter */
+.pad { display: grid; grid-template-columns: repeat(9, 1fr); gap: 5px; }
+.key {
+  border: 0; background: var(--surface); border-radius: 10px; min-height: 58px; cursor: pointer; min-width: 0;
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px;
+  box-shadow: inset 0 0 0 1.5px var(--line); padding: 4px 0;
+}
+.key .d { width: min(34px, 82%); aspect-ratio: 1; display: block; }
+.key .n { font-family: var(--font-mono); font-size: 10px; color: var(--muted); line-height: 1; }
+.key:active { background: var(--select-bg); }
+.key:disabled { opacity: .3; cursor: default; }
+.tool:focus-visible, .key:focus-visible, .ghost:focus-visible, .seg button:focus-visible, .go:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+
+/* Short description of the controls under the game */
+.help { margin: 2px 0 0; font-size: 13px; line-height: 1.5; color: var(--muted); text-wrap: pretty; }
+.help b { color: var(--ink); font-weight: 600; }
+
+/* Dialog overlay for the win, game-over and confirm messages */
+.overlay {
+  position: fixed; inset: 0; z-index: 20; display: grid; place-items: center;
+  background: rgba(10, 14, 22, .55);
+  padding: max(16px, env(safe-area-inset-top, 0px)) max(16px, env(safe-area-inset-right, 0px)) max(16px, env(safe-area-inset-bottom, 0px)) max(16px, env(safe-area-inset-left, 0px));
+}
+.card { background: var(--surface); color: var(--ink); border-radius: 16px; padding: 24px; width: min(100%, 340px); display: flex; flex-direction: column; gap: 14px; }
+.card h2 { margin: 0; font-size: 26px; letter-spacing: -0.03em; font-weight: 800; text-wrap: balance; }
+.card p { margin: 0; color: var(--muted); font-size: 15px; line-height: 1.5; }
+.facts { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; font-family: var(--font-mono); }
+.facts div { background: var(--panel); border-radius: 10px; padding: 10px 6px; text-align: center; }
+.facts b { display: block; font-size: 18px; font-weight: 500; color: var(--ink); }
+.facts span { font-size: 11px; color: var(--muted); }
+.go { border: 0; background: var(--accent); color: var(--accent-ink); border-radius: 12px; min-height: 48px; font-size: 16px; font-weight: 700; cursor: pointer; }
+.go.alt { background: transparent; color: var(--ink); box-shadow: inset 0 0 0 1.5px var(--line-strong); }
+
+/* Slightly smaller controls on narrow phones */
+@media (max-width: 420px) {
+  h1 { font-size: 22px; }
+  .key { min-height: 52px; }
+  .seg button { padding: 7px 10px; }
+}
+@media (prefers-reduced-motion: no-preference) {
+  .cell, .tool, .key { transition: background-color .12s ease; }
+}
